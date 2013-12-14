@@ -57,11 +57,8 @@ public class HttpApiClient {
         int responseCode = con.getResponseCode();
         System.out.println("Response Code : " + responseCode);
 
-//        JsonReader jsonReader = Json.createReader(con.getInputStream()).readObject();
         Gson gson = new Gson();
         ApiResponse apiResponse = gson.fromJson(readInputStream(con.getInputStream()), ApiResponse.class);
-
-        System.out.println(apiResponse.getClientId());
 
         if(responseCode != 200) {
             String errorMessage = "Received non 200 response code: " + Integer.toString(responseCode);

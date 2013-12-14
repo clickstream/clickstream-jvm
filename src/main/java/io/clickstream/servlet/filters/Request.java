@@ -6,6 +6,7 @@ import javax.servlet.http.HttpSession;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 public class Request {
     private final String ip;
@@ -52,8 +53,8 @@ public class Request {
         this.session = getSession(req);
     }
 
-    public void prepare () {
-        this.params = getParams();
+    public void prepare(Pattern filterParams) {
+        this.params = getParams(filterParams);
     }
 
     private Map<String,String> getHeaders(HttpServletRequest req) {
@@ -90,13 +91,14 @@ public class Request {
         return map;
     }
 
-    private Map<String,String> getParams() {
+    private Map<String,String> getParams(Pattern filterParams) {
         Map<String,String> map = new HashMap<String, String>();
         if(querystring != null) {
             String[] nameValuePairs = querystring.split("&");
             for(String nameValuePair: nameValuePairs) {
                 String[] params = nameValuePair.split("=");
-                map.put(params[0], params[1]);
+                String key = params[0], value = filterParams.matcher(key).find() ? "[FILTERED]" : params[1];
+                map.put(key, value);
             }
         }
         return map;

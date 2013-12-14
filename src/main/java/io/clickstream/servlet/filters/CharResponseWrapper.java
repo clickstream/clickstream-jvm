@@ -7,10 +7,13 @@ import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public class CharResponseWrapper extends HttpServletResponseWrapper {
-    private CharArrayWriter output;
-    private HttpServletResponse res;
+    public static final Pattern SUPPORTED_CONTENT_TYPES = Pattern.compile("(text/html|application/json|application/xml|text/plain)");
+    private final CharArrayWriter output = new CharArrayWriter();
+    private final HttpServletResponse res;
+    private String body;
 
     public String toString() {
         return output.toString();
@@ -19,17 +22,16 @@ public class CharResponseWrapper extends HttpServletResponseWrapper {
     public CharResponseWrapper(HttpServletResponse response) throws IOException {
         super(response);
         res = response;
-        output = new CharArrayWriter();
     }
 
     public PrintWriter getWriter(){
         return new PrintWriter(output);
     }
 
-    public String setCookie(Cookie cookie) {
+    public String setCookie(Cookie cookie, String name) {
         if(cookie == null) {
             String uuid = UUID.randomUUID().toString();
-            cookie = new Cookie("clickstream", uuid);
+            cookie = new Cookie(name, uuid);
         }
         cookie.setMaxAge(60*60);
         res.addCookie(cookie);
@@ -54,5 +56,9 @@ public class CharResponseWrapper extends HttpServletResponseWrapper {
             out.write(output.toString());
 
         out.close();
+    }
+
+    public boolean isCapturable() {
+        return  output.size() > 0 && SUPPORTED_CONTENT_TYPES.matcher(res.getContentType()).find();
     }
 }

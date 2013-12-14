@@ -22,6 +22,7 @@ import java.util.regex.Pattern;
 
 public class CaptureFilter implements Filter {
     public static final String COOKIE_NAME = "clickstream.io";
+    public static final int COOKIE_AGE = 60*60;
     public static final String CRAWLERS = "(Baidu|Gigabot|Googlebot|libwww-perl|lwp-trivial|msnbot|SiteUptime|Slurp|WordPress|ZIBB|ZyBorg|bot|crawler|spider|robot|crawling|facebook|w3c|coccoc|Daumoa|panopta)";
     private boolean capture = false;
     private boolean benchmark = false;
@@ -104,18 +105,18 @@ public class CaptureFilter implements Filter {
             if(! isFilteredUri(request) && ! isBot(request)) {
                 if(handshakeResponse == null) setHandshakeResponse();
 
-                CharResponseWrapper wrapper = new CharResponseWrapper(response);
+                ResponseWrapper responseWrapper = new ResponseWrapper(response);
 
                 long start = System.currentTimeMillis();
-                chain.doFilter(req, wrapper);
+                chain.doFilter(req, responseWrapper);
                 long end = System.currentTimeMillis();
 
-                if(wrapper.isCapturable()) {
-                    String cookie = wrapper.setCookie(getCookie(request, COOKIE_NAME), COOKIE_NAME);
+                if(responseWrapper.isCapturable()) {
+                    String cookie = setCookie(request, responseWrapper);
                     String pid = UUID.randomUUID().toString();
                     Inspector inspector = new Inspector(httpApiClient, hostname, filterParams);
-                    inspector.investigate(request, response, wrapper.toString(), start, end, cookie, pid);
-                    wrapper.finishResponse(handshakeResponse, cookie, pid);
+                    inspector.investigate(request, response, responseWrapper.toString(), start, end, cookie, pid);
+                    responseWrapper.finishResponse(handshakeResponse, cookie, pid);
                     executorService.submit(inspector);
                 }
                 System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
@@ -142,14 +143,24 @@ public class CaptureFilter implements Filter {
         }
     }
 
-    private boolean isBot(HttpServletRequest request) {
-        return ! captureCrawlers && crawlers.matcher(request.getHeader("User-Agent")).find();
-    }
-
     private boolean isFilteredUri(HttpServletRequest request) {
         System.out.println("uri:" + request.getRequestURI());
         System.out.println("filterUri:" + filterUri.toString());
         return filterUri.matcher(request.getRequestURI()).find();
+    }
+
+    private boolean isBot(HttpServletRequest request) {
+        return ! captureCrawlers && crawlers.matcher(request.getHeader("User-Agent")).find();
+    }
+
+    private String setCookie(HttpServletRequest request, ResponseWrapper responseWrapper) {
+        Cookie cookie = getCookie(request, COOKIE_NAME);
+        if(cookie == null) {
+            String uuid = UUID.randomUUID().toString();
+            cookie = new Cookie(COOKIE_NAME, uuid);
+        }
+        responseWrapper.setCookie(cookie, COOKIE_AGE);
+        return cookie.getValue();
     }
 
     private Cookie getCookie(HttpServletRequest request, String name) {

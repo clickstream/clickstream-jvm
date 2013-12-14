@@ -6,10 +6,9 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
-public class CharResponseWrapper extends HttpServletResponseWrapper {
+public class ResponseWrapper extends HttpServletResponseWrapper {
     public static final Pattern SUPPORTED_CONTENT_TYPES = Pattern.compile("(text/html|application/json|application/xml|text/plain)");
     private final CharArrayWriter output = new CharArrayWriter();
     private final HttpServletResponse res;
@@ -19,7 +18,7 @@ public class CharResponseWrapper extends HttpServletResponseWrapper {
         return output.toString();
     }
 
-    public CharResponseWrapper(HttpServletResponse response) throws IOException {
+    public ResponseWrapper(HttpServletResponse response) throws IOException {
         super(response);
         res = response;
     }
@@ -28,12 +27,8 @@ public class CharResponseWrapper extends HttpServletResponseWrapper {
         return new PrintWriter(output);
     }
 
-    public String setCookie(Cookie cookie, String name) {
-        if(cookie == null) {
-            String uuid = UUID.randomUUID().toString();
-            cookie = new Cookie(name, uuid);
-        }
-        cookie.setMaxAge(60*60);
+    public String setCookie(Cookie cookie, int age) {
+        cookie.setMaxAge(age);
         res.addCookie(cookie);
         return cookie.getValue();
     }

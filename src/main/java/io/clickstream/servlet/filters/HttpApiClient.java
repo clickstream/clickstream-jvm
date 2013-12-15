@@ -19,7 +19,6 @@ public class HttpApiClient {
 
     public HttpApiClient(String apiKey, String apiUri) {
         this.apiKey = apiKey;
-        System.out.println("apiUri: " + apiUri);
         if(apiUri != null) this.apiUri = apiUri;
     }
 
@@ -44,7 +43,6 @@ public class HttpApiClient {
 
     private HttpURLConnection getConnection (String endpoint) throws IOException {
         String url = apiUri + "/" + apiKey + endpoint;
-        System.out.println("url: " + url);
         URL objUrl = new URL(url);
         HttpURLConnection con = (HttpURLConnection) objUrl.openConnection();
         con.setRequestProperty("User-Agent", "Clickstream/JVM");
@@ -55,7 +53,6 @@ public class HttpApiClient {
 
     private ApiResponse getResponse(HttpURLConnection con) throws IOException {
         int responseCode = con.getResponseCode();
-        System.out.println("Response Code : " + responseCode);
 
         Gson gson = new Gson();
         ApiResponse apiResponse = gson.fromJson(readInputStream(con.getInputStream()), ApiResponse.class);

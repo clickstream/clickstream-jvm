@@ -9,6 +9,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -21,7 +22,7 @@ import java.util.regex.Pattern;
 // TODO: STATUS_WITH_NO_ENTITY_BODY, benchmark, logging
 
 public class CaptureFilter implements Filter {
-    public static final String COOKIE_NAME = "clickstream.io";
+    public static final String COOKIE_NAME = "clickstream-io";
     public static final int COOKIE_AGE = 60*60;
     public static final String CRAWLERS = "(Baidu|Gigabot|Googlebot|libwww-perl|lwp-trivial|msnbot|SiteUptime|Slurp|WordPress|ZIBB|ZyBorg|bot|crawler|spider|robot|crawling|facebook|w3c|coccoc|Daumoa|panopta)";
     private boolean capture = false;
@@ -33,9 +34,11 @@ public class CaptureFilter implements Filter {
     private ApiResponse handshakeResponse;
     private String hostname;
     private Pattern filterParams;
+    private String jsFilterParams;
     private Pattern filterUri;
     private Pattern crawlers;
     private boolean captureCrawlers = false;
+    private Inspector inspector;
 
     public void init(FilterConfig filterConfig) throws ServletException {
 
@@ -55,9 +58,12 @@ public class CaptureFilter implements Filter {
         }
 
         String apiUri = filterConfig.getInitParameter("api-uri");
-        filterParams = setFilterRegex("filter-params");
-        filterUri = setFilterRegex("filter-uri");
-        crawlers = setFilterRegex("filter-crawlers");
+        httpApiClient = new HttpApiClient(apiKey, apiUri);
+
+        filterParams = getFilterRegex("filter-params");
+        jsFilterParams = getJsFilter("filter-params");
+        filterUri = getFilterRegex("filter-uri");
+        crawlers = getFilterRegex("filter-crawlers");
         if(crawlers == null) crawlers = Pattern.compile(CRAWLERS);
         if(filterConfig.getInitParameter("capture-crawlers") != null)
             captureCrawlers = true;
@@ -68,7 +74,8 @@ public class CaptureFilter implements Filter {
             e.printStackTrace();
         }
 
-        doHandshake(apiKey, apiUri);
+        inspector = new Inspector(httpApiClient, hostname, filterParams);
+        doHandshake();
     }
 
     private boolean isConfigParameterTrue(String name) {
@@ -76,15 +83,34 @@ public class CaptureFilter implements Filter {
         return param != null && param.equals("true");
     }
 
-    private Pattern setFilterRegex(String param) {
+    private Pattern getFilterRegex(String param) {
         String sFilter = filterConfig.getInitParameter(param);
         return sFilter != null && !sFilter.trim().equals("") ?
-                Pattern.compile('(' + sFilter + ')') :
+                Pattern.compile("(" + sFilter + ")") :
                 null;
     }
 
-    private void doHandshake(String apiKey, String apiUri) {
-        httpApiClient = new HttpApiClient(apiKey, apiUri);
+    private String getJsFilter(String param) {
+        String sFilter = filterConfig.getInitParameter(param);
+        return sFilter != null ?
+                "[" + join(sFilter.split("/"), ",") + "]" :
+                null;
+    }
+
+    private String join(String[] strings, String glue) {
+        int length = strings.length;
+        if (length == 0) return "";
+        StringBuilder out = new StringBuilder();
+        appendQuotedString(out, strings[0]);
+        for (int i = 1; i < length; i++) appendQuotedString(out.append(glue), strings[i]);
+        return out.toString();
+    }
+
+    private void appendQuotedString(StringBuilder out, String string) {
+        out.append("'").append(string).append("'");
+    }
+
+    private void doHandshake() {
         Handshake handshake = new Handshake(httpApiClient);
         ExecutorService handshakeService = Executors.newSingleThreadExecutor();
         future = handshakeService.submit(handshake);
@@ -98,39 +124,27 @@ public class CaptureFilter implements Filter {
                          FilterChain chain) throws IOException, ServletException {
 
         long s = System.currentTimeMillis();
-        if(capture) {
-            HttpServletRequest request = (HttpServletRequest) req;
-            HttpServletResponse response = (HttpServletResponse) res;
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) res;
+        if(handshakeResponse == null) setHandshakeResponse();
 
-            if(! isFilteredUri(request) && ! isBot(request)) {
-                if(handshakeResponse == null) setHandshakeResponse();
+        if(capture && ! isFilteredUri(request) && ! isBot(request)) {
+            ResponseWrapper responseWrapper = new ResponseWrapper(response);
 
-                ResponseWrapper responseWrapper = new ResponseWrapper(response);
-
-                long start = System.currentTimeMillis();
-                chain.doFilter(req, responseWrapper);
-                long end = System.currentTimeMillis();
-
-                if(responseWrapper.isCapturable()) {
-                    String cookie = setCookie(request, responseWrapper);
-                    String pid = UUID.randomUUID().toString();
-                    Inspector inspector = new Inspector(httpApiClient, hostname, filterParams);
-                    inspector.investigate(request, response, responseWrapper.toString(), start, end, cookie, pid);
-                    responseWrapper.finishResponse(handshakeResponse, cookie, pid);
-                    executorService.submit(inspector);
-                }
-                System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
-            } else {
-                long start = System.currentTimeMillis();
-                chain.doFilter(req, res);
-                long end = System.currentTimeMillis();
-                System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
-            }
-        }  else {
             long start = System.currentTimeMillis();
-            chain.doFilter(req, res);
+            chain.doFilter(req, responseWrapper);
             long end = System.currentTimeMillis();
+
+            if(responseWrapper.isCapturable()) {
+                doCapture(request, responseWrapper, start, end);
+            } else {
+                responseWrapper.finishResponse();
+            }
+
             System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
+
+        }  else {
+            chain.doFilter(req, res);
         }
     }
 
@@ -144,13 +158,26 @@ public class CaptureFilter implements Filter {
     }
 
     private boolean isFilteredUri(HttpServletRequest request) {
-        System.out.println("uri:" + request.getRequestURI());
-        System.out.println("filterUri:" + filterUri.toString());
         return filterUri.matcher(request.getRequestURI()).find();
     }
 
     private boolean isBot(HttpServletRequest request) {
         return ! captureCrawlers && crawlers.matcher(request.getHeader("User-Agent")).find();
+    }
+
+    private void doCapture(HttpServletRequest request, ResponseWrapper responseWrapper, long start, long end) throws IOException {
+        String cookie = setCookie(request, responseWrapper);
+        String pid = UUID.randomUUID().toString();
+        String body = responseWrapper.toString();
+        String contentType = responseWrapper.getContentType();
+        inspector.investigate(request, responseWrapper, body, start, end, cookie, pid);
+
+        if(handshakeResponse != null && contentType != null && contentType.contains("text/html") && body.length() > 0) {
+            body = insertJs(cookie, pid, body);
+        }
+
+        responseWrapper.finishResponse(body);
+        executorService.submit(inspector);
     }
 
     private String setCookie(HttpServletRequest request, ResponseWrapper responseWrapper) {
@@ -172,5 +199,14 @@ public class CaptureFilter implements Filter {
             }
         }
         return null;
+    }
+
+    private String insertJs(String cookie, String pid, String body) throws IOException {
+        CharArrayWriter caw = new CharArrayWriter();
+        String script = "<script>(function(){var uri='" + handshakeResponse.getWs() + "', cid='" + handshakeResponse.getClientId() +
+                "', sid='" + cookie + "', pid='" + pid + "', paramsFilter = " + jsFilterParams + ";" +
+                handshakeResponse.getJs() +"})();</script>";
+        caw.write(body + "\n" + script);
+        return caw.toString();
     }
 }

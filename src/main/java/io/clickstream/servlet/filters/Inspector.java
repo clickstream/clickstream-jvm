@@ -29,7 +29,7 @@ public class Inspector implements Runnable {
         try {
             ApiResponse response = httpApiClient.postData(hit.toJson());
             // TODO: log response
-            System.out.println(response.toString());
+            System.out.println("status:" + response.getStatus() + ", message:" + response.getMessage());
         } catch (IOException e) {
             // TODO: log error
             e.printStackTrace();

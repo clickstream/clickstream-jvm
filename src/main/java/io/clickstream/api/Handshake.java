@@ -1,4 +1,4 @@
-package io.clickstream.servlet.filters;
+package io.clickstream.api;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;

@@ -1,4 +1,8 @@
-package io.clickstream.servlet.filters;
+package io.clickstream.driver;
+
+import io.clickstream.api.ApiResponse;
+import io.clickstream.api.HttpApiClient;
+import io.clickstream.hit.Hit;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

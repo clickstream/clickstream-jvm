@@ -1,4 +1,4 @@
-package io.clickstream.servlet.filters;
+package io.clickstream.hit;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;

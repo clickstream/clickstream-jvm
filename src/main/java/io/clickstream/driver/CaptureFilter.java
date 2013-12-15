@@ -1,4 +1,8 @@
-package io.clickstream.servlet.filters;
+package io.clickstream.driver;
+
+import io.clickstream.api.ApiResponse;
+import io.clickstream.api.Handshake;
+import io.clickstream.api.HttpApiClient;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -74,7 +78,6 @@ public class CaptureFilter implements Filter {
             e.printStackTrace();
         }
 
-        inspector = new Inspector(httpApiClient, hostname, filterParams);
         doHandshake();
     }
 
@@ -137,11 +140,11 @@ public class CaptureFilter implements Filter {
 
             if(responseWrapper.isCapturable()) {
                 doCapture(request, responseWrapper, start, end);
+                System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
             } else {
                 responseWrapper.finishResponse();
             }
 
-            System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
 
         }  else {
             chain.doFilter(req, res);
@@ -170,6 +173,7 @@ public class CaptureFilter implements Filter {
         String pid = UUID.randomUUID().toString();
         String body = responseWrapper.toString();
         String contentType = responseWrapper.getContentType();
+        inspector = new Inspector(httpApiClient, hostname, filterParams);
         inspector.investigate(request, responseWrapper, body, start, end, cookie, pid);
 
         if(handshakeResponse != null && contentType != null && contentType.contains("text/html") && body.length() > 0) {

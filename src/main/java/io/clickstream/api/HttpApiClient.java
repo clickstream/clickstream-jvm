@@ -1,4 +1,4 @@
-package io.clickstream.servlet.filters;
+package io.clickstream.api;
 
 import com.google.gson.Gson;
 
@@ -15,7 +15,7 @@ import java.util.zip.GZIPOutputStream;
 public class HttpApiClient {
 
     private String apiKey;
-    private String apiUri = "http://localhost:15080";
+    private String apiUri = "http://api.clickstream.io";
 
     public HttpApiClient(String apiKey, String apiUri) {
         this.apiKey = apiKey;

@@ -1,4 +1,4 @@
-package io.clickstream.servlet.filters;
+package io.clickstream.driver;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;

@@ -1,4 +1,4 @@
-package io.clickstream.servlet.filters;
+package io.clickstream.hit;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;

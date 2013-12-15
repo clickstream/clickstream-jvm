@@ -1,4 +1,4 @@
-package io.clickstream.servlet.filters;
+package io.clickstream.hit;
 
 import com.google.gson.Gson;
 import javax.servlet.http.HttpServletRequest;

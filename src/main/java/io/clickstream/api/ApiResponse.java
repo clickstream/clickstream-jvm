@@ -1,4 +1,4 @@
-package io.clickstream.servlet.filters;
+package io.clickstream.api;
 
 public class ApiResponse {
     private String clientId;

@@ -6,7 +6,7 @@
 
     <groupId>io.clickstream</groupId>
     <artifactId>driver</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
     <build>
         <defaultGoal>package</defaultGoal>
         <plugins>

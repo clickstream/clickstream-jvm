@@ -1,4 +1,4 @@
-package io.clickstream.api;
+package io.clickstream.driver;
 
 import com.google.gson.Gson;
 
@@ -12,7 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.zip.GZIPOutputStream;
 
-public class HttpApiClient {
+class HttpApiClient {
 
     private String apiKey;
     private String apiUri = "http://api.clickstream.io";

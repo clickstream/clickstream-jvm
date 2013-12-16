@@ -1,9 +1,9 @@
-package io.clickstream.api;
+package io.clickstream.driver;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-public class Handshake implements Callable<ApiResponse> {
+class Handshake implements Callable<ApiResponse> {
     private HttpApiClient httpApiClient;
 
     public Handshake(HttpApiClient httpApiClient) {

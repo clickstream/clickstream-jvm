@@ -1,15 +1,11 @@
 package io.clickstream.driver;
 
-import io.clickstream.api.ApiResponse;
-import io.clickstream.api.HttpApiClient;
-import io.clickstream.hit.Hit;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-public class Inspector implements Runnable {
+class Inspector implements Runnable {
 
     private final HttpApiClient httpApiClient;
     private final String hostname;

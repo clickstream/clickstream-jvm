@@ -1,6 +1,6 @@
-package io.clickstream.api;
+package io.clickstream.driver;
 
-public class ApiResponse {
+class ApiResponse {
     private String clientId;
     private String ws;
     private String js;

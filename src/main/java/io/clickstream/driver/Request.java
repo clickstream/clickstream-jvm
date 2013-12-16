@@ -1,4 +1,4 @@
-package io.clickstream.hit;
+package io.clickstream.driver;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
-public class Request {
+class Request {
     private final String ip;
     private final String uri;
     private final String user_agent;

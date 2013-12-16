@@ -6,13 +6,10 @@ import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.regex.Pattern;
 
-public class ResponseWrapper extends HttpServletResponseWrapper {
-    public static final Pattern SUPPORTED_CONTENT_TYPES = Pattern.compile("(text/html|application/json|application/xml|text/plain)");
+class ResponseWrapper extends HttpServletResponseWrapper {
     private final CharArrayWriter output = new CharArrayWriter();
     private final HttpServletResponse res;
-    private String body;
 
     public String toString() {
         return output.toString();
@@ -42,9 +39,5 @@ public class ResponseWrapper extends HttpServletResponseWrapper {
         res.setContentLength(output.length());
         out.write(output);
         out.close();
-    }
-
-    public boolean isCapturable() {
-        return  res.getContentType() != null && SUPPORTED_CONTENT_TYPES.matcher(res.getContentType()).find();
     }
 }

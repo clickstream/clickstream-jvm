@@ -1,9 +1,5 @@
 package io.clickstream.driver;
 
-import io.clickstream.api.ApiResponse;
-import io.clickstream.api.Handshake;
-import io.clickstream.api.HttpApiClient;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -29,6 +25,7 @@ public class CaptureFilter implements Filter {
     public static final String COOKIE_NAME = "clickstream-io";
     public static final int COOKIE_AGE = 60*60;
     public static final String CRAWLERS = "(Baidu|Gigabot|Googlebot|libwww-perl|lwp-trivial|msnbot|SiteUptime|Slurp|WordPress|ZIBB|ZyBorg|bot|crawler|spider|robot|crawling|facebook|w3c|coccoc|Daumoa|panopta)";
+    public static final Pattern ACCEPTED_CONTENT_TYPES = Pattern.compile("(text/html|application/json|application/xml|text/plain)");
     private boolean capture = false;
     private boolean benchmark = false;
     private FilterConfig filterConfig = null;
@@ -138,7 +135,7 @@ public class CaptureFilter implements Filter {
             chain.doFilter(req, responseWrapper);
             long end = System.currentTimeMillis();
 
-            if(responseWrapper.isCapturable()) {
+            if(isContentTypeAccepted(responseWrapper.getContentType())) {
                 doCapture(request, responseWrapper, start, end);
                 System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
             } else {
@@ -166,6 +163,10 @@ public class CaptureFilter implements Filter {
 
     private boolean isBot(HttpServletRequest request) {
         return ! captureCrawlers && crawlers.matcher(request.getHeader("User-Agent")).find();
+    }
+
+    private boolean isContentTypeAccepted(String contentType) {
+        return contentType != null && ACCEPTED_CONTENT_TYPES.matcher(contentType).find();
     }
 
     private void doCapture(HttpServletRequest request, ResponseWrapper responseWrapper, long start, long end) throws IOException {

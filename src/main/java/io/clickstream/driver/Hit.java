@@ -1,11 +1,11 @@
-package io.clickstream.hit;
+package io.clickstream.driver;
 
 import com.google.gson.Gson;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.regex.Pattern;
 
-public class Hit {
+class Hit {
     private final String sid;
     private final String pid;
     private final Request request;

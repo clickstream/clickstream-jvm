@@ -7,6 +7,50 @@
     <groupId>io.clickstream</groupId>
     <artifactId>driver</artifactId>
     <version>0.3-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>clickstream.io driver</name>
+    <description>The driver for clickstream.io analytics solution</description>
+    <url>http://clickstream.io</url>
+
+    <licenses>
+        <license>
+            <name>The BSD 3-Clause License</name>
+            <url>http://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>ClickStream</name>
+        <url>http://clickstream.io</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <id>jtblin</id>
+            <name>Jerome</name>
+            <email>jerome@clickstream.io</email>
+            <url>http://about.me/jtblin</url>
+            <organization>ClickStream</organization>
+            <organizationUrl>http://clickstream.io</organizationUrl>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+            <timezone>+10</timezone>
+            <properties>
+                <picUrl>http://www.gravatar.com/avatar/bb0c73d7c44b5a0846b685953d12ae87.jpg</picUrl>
+            </properties>
+        </developer>
+    </developers>
+
+    <scm>
+        <url>https://github.com/clickstream/clickstream-jvm</url>
+        <connection>scm:git:git@github.com:clickstream/clickstream-jvm.git</connection>
+        <developerConnection>scm:git:git@github.com:clickstream/clickstream-jvm.git</developerConnection>
+    </scm>
+
     <build>
         <defaultGoal>package</defaultGoal>
         <plugins>
@@ -48,11 +92,4 @@
             <version>2.2.4</version>
         </dependency>
     </dependencies>
-    <distributionManagement>
-        <repository>
-            <id>snapshots</id>
-            <name>ip-10-0-1-40-snapshots</name>
-            <url>http://tc8.airasiaexpedia.net/artifactory/ext-snapshot-local</url>
-        </repository>
-    </distributionManagement>
 </project>

@@ -1,11 +1,11 @@
-package io.clickstream.hit;
+package io.clickstream.driver;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Response {
+class Response {
     private final int status;
     private final Map<String,String> headers;
     private final long size;

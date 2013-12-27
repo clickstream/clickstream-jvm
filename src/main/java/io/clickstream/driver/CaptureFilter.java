@@ -79,7 +79,8 @@ public class CaptureFilter implements Filter {
     }
 
     private boolean isBot(HttpServletRequest request) {
-        return ! config.isCaptureCrawlers() && config.getCrawlers().matcher(request.getHeader("User-Agent")).find();
+        String userAgent = request.getHeader("User-Agent");
+        return ! config.isCaptureCrawlers() && userAgent != null && config.getCrawlers().matcher(userAgent).find();
     }
 
     private boolean isContentTypeAccepted(String contentType) {

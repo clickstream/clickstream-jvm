@@ -11,8 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.CharArrayWriter;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,18 +26,10 @@ public class CaptureFilter implements Filter {
     private ExecutorService executorService = Executors.newCachedThreadPool();
     private Future<ApiResponse> future;
     private ApiResponse handshakeResponse;
-    private String hostname;
     private Config config;
 
     public void init(FilterConfig filterConfig) throws ServletException {
         config = new Config(filterConfig);
-
-        try {
-            hostname = InetAddress.getLocalHost().getHostName();
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-
         doHandshake();
     }
 
@@ -107,7 +97,7 @@ public class CaptureFilter implements Filter {
         String pid = UUID.randomUUID().toString();
         String body = responseWrapper.toString();
         String contentType = responseWrapper.getContentType();
-        Inspector inspector = new Inspector(config.getHttpApiClient(), hostname, config.getFilterParams());
+        Inspector inspector = new Inspector(config);
         inspector.investigate(request, responseWrapper, body, start, end, cookie, pid);
 
         if(handshakeResponse != null && contentType != null && contentType.contains("text/html") && body.length() > 0) {

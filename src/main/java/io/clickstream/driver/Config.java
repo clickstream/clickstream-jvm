@@ -2,10 +2,13 @@ package io.clickstream.driver;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.regex.Pattern;
 
 public class Config {
     public static final String CRAWLERS = "(Baidu|Gigabot|Googlebot|libwww-perl|lwp-trivial|msnbot|SiteUptime|Slurp|WordPress|ZIBB|ZyBorg|bot|crawler|spider|robot|crawling|facebook|w3c|coccoc|Daumoa|panopta)";
+    private String hostname;
     private boolean capture = false;
     private FilterConfig filterConfig;
     private boolean benchmark = false;
@@ -42,6 +45,12 @@ public class Config {
         if(crawlers == null) crawlers = Pattern.compile(CRAWLERS);
         if(filterConfig.getInitParameter("capture-crawlers") != null)
             captureCrawlers = true;
+
+        try {
+            hostname = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setFilterConfig(FilterConfig filterConfig) {
@@ -107,5 +116,9 @@ public class Config {
 
     public String getJsFilterParams() {
         return jsFilterParams;
+    }
+
+    public String getHostname() {
+        return hostname;
     }
 }

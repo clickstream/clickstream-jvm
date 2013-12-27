@@ -12,11 +12,10 @@ class Inspector implements Runnable {
     private final Pattern filterParams;
     private Hit hit;
 
-    public Inspector(HttpApiClient httpApiClient, String hostname, Pattern filterParams) {
-
-        this.httpApiClient = httpApiClient;
-        this.hostname = hostname;
-        this.filterParams = filterParams;
+    public Inspector(Config config) {
+        this.httpApiClient = config.getHttpApiClient();
+        this.hostname = config.getHostname();
+        this.filterParams = config.getFilterParams();
     }
 
     public void investigate(HttpServletRequest req, HttpServletResponse res, String body,

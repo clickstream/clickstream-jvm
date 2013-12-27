@@ -73,7 +73,7 @@ public class Config {
     private String getJsFilter(String param) {
         String sFilter = filterConfig.getInitParameter(param);
         return sFilter != null ?
-                "[" + join(sFilter.split("|"), ",") + "]" :
+                "[" + join(sFilter.split("\\|"), ",") + "]" :
                 null;
     }
 

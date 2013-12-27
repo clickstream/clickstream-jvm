@@ -6,12 +6,9 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.CharArrayWriter;
 import java.io.IOException;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -20,13 +17,10 @@ import java.util.regex.Pattern;
 // TODO: STATUS_WITH_NO_ENTITY_BODY, benchmark, logging
 
 public class CaptureFilter implements Filter {
-    public static final String COOKIE_NAME = "clickstream-io";
-    public static final int COOKIE_AGE = 60*60;
     public static final Pattern ACCEPTED_CONTENT_TYPES = Pattern.compile("(text/html|application/json|application/xml|text/plain)");
-    private ExecutorService executorService = Executors.newCachedThreadPool();
-    private Future<ApiResponse> future;
-    private ApiResponse handshakeResponse;
     private Config config;
+    private ApiResponse handshakeResponse;
+    private Future<ApiResponse> future;
 
     public void init(FilterConfig filterConfig) throws ServletException {
         config = new Config(filterConfig);
@@ -59,13 +53,13 @@ public class CaptureFilter implements Filter {
             long end = System.currentTimeMillis();
 
             if(isContentTypeAccepted(responseWrapper.getContentType())) {
-                doCapture(request, responseWrapper, start, end);
+                Inspector inspector = new Inspector(config, handshakeResponse);
+                String body = inspector.investigate(request, responseWrapper, start, end);
+                responseWrapper.finishResponse(body);
                 System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
             } else {
                 responseWrapper.finishResponse();
             }
-
-
         }  else {
             chain.doFilter(req, res);
         }
@@ -92,49 +86,5 @@ public class CaptureFilter implements Filter {
         return contentType != null && ACCEPTED_CONTENT_TYPES.matcher(contentType).find();
     }
 
-    private void doCapture(HttpServletRequest request, ResponseWrapper responseWrapper, long start, long end) throws IOException {
-        String cookie = setCookie(request, responseWrapper);
-        String pid = UUID.randomUUID().toString();
-        String body = responseWrapper.toString();
-        String contentType = responseWrapper.getContentType();
-        Inspector inspector = new Inspector(config);
-        inspector.investigate(request, responseWrapper, body, start, end, cookie, pid);
 
-        if(handshakeResponse != null && contentType != null && contentType.contains("text/html") && body.length() > 0) {
-            body = insertJs(cookie, pid, body);
-        }
-
-        responseWrapper.finishResponse(body);
-        executorService.submit(inspector);
-    }
-
-    private String setCookie(HttpServletRequest request, ResponseWrapper responseWrapper) {
-        Cookie cookie = getCookie(request, COOKIE_NAME);
-        if(cookie == null) {
-            String uuid = UUID.randomUUID().toString();
-            cookie = new Cookie(COOKIE_NAME, uuid);
-        }
-        responseWrapper.setCookie(cookie, COOKIE_AGE);
-        return cookie.getValue();
-    }
-
-    private Cookie getCookie(HttpServletRequest request, String name) {
-        Cookie[] cookies = request.getCookies();
-        if(cookies != null) {
-            for(Cookie cookie : cookies) {
-                if(cookie.getName().equals(name))
-                    return cookie;
-            }
-        }
-        return null;
-    }
-
-    private String insertJs(String cookie, String pid, String body) throws IOException {
-        CharArrayWriter caw = new CharArrayWriter();
-        String script = "<script>(function(){var uri='" + handshakeResponse.getWs() + "', cid='" + handshakeResponse.getClientId() +
-                "', sid='" + cookie + "', pid='" + pid + "', paramsFilter = " + config.getJsFilterParams() + ";" +
-                handshakeResponse.getJs() +"})();</script>";
-        caw.write(body + "\n" + script);
-        return caw.toString();
-    }
 }

@@ -98,6 +98,10 @@ public class Config {
         return capture;
     }
 
+    public boolean isBenchmark() {
+        return benchmark;
+    }
+
     public Pattern getFilterUri() {
         return filterUri;
     }

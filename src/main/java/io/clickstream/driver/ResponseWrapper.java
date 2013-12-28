@@ -36,7 +36,8 @@ class ResponseWrapper extends HttpServletResponseWrapper {
 
     public void finishResponse(String output) throws IOException {
         PrintWriter out = res.getWriter();
-        res.setContentLength(output.length());
+        // Do NOT set ContentLength as it will lead to
+        // truncated responses with sitemesh
         out.write(output);
         out.close();
     }

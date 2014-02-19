@@ -27,8 +27,7 @@ public class Config {
         else
             return;
 
-        if(isConfigParameterTrue("bench"))
-            benchmark = true;
+        benchmark = isConfigParameterTrue("bench");
 
         String apiKey =  getInitParameter("api-key");
         if(apiKey == null || apiKey.trim().equals("")) {

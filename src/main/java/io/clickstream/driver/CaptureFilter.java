@@ -24,7 +24,7 @@ public class CaptureFilter implements Filter {
 
     public void init(FilterConfig filterConfig) throws ServletException {
         config = new Config(filterConfig);
-        doHandshake();
+        if (config.isCapture()) doHandshake();
     }
 
     private void doHandshake() {
@@ -43,9 +43,9 @@ public class CaptureFilter implements Filter {
         long s = System.currentTimeMillis();
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) res;
-        if(handshakeResponse == null) setHandshakeResponse();
 
         if(config.isCapture() && ! isFilteredUri(request) && ! isBot(request)) {
+            if(handshakeResponse == null) setHandshakeResponse();
             ResponseWrapper responseWrapper = new ResponseWrapper(response);
 
             long start = System.currentTimeMillis();

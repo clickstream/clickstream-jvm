@@ -123,16 +123,4 @@ class Request {
         }
         return ip;
     }
-
-//        return Json.createObjectBuilder()
-//                .add("path", script_name + path_info)
-//                .add("fullpath", querystring == null || querystring.equals("") ? uri : uri + "?" + querystring)
-//                .add("url", url)
-//                .add("base_url", scheme + "://" + host + (port != 80 && port != 443 ? ":" + port : ""))
-//                .add("content_type", content_type)
-//                .add("content_charset", char_set)
-//                .add("protocol", protocol)
-////                .add("xhr", xhr)
-//                .build();
-//    }
 }

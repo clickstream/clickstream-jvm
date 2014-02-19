@@ -46,7 +46,25 @@ In order to use, include the following in your
         <url-pattern>/*</url-pattern>
     </filter-mapping>
 
-## Options
+### Additional configuration options
+
+Parameters can also be set using `context.xml` or `environment variables` with the longer form: `io.clickstream.io` +
+parameter name.
+
+Example with **context.xml**:
+
+    <Context>
+        <Parameter name="io.clickstream.capture" value="true"
+                   override="false"/>
+    </Context>
+
+The order in which the parameters are searched and return is:
+
+1. web.xml init params
+2. context.xml params
+3. environment variables
+
+## Parameters
 
 - `api-key`: the api key for authentication (mandatory)
 - `api-uri`: overwrite api uri endpoint

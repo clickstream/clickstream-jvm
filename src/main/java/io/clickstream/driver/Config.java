@@ -30,12 +30,12 @@ public class Config {
         if(isConfigParameterTrue("bench"))
             benchmark = true;
 
-        String apiKey = filterConfig.getInitParameter("api-key");
+        String apiKey =  getInitParameter("api-key");
         if(apiKey == null || apiKey.trim().equals("")) {
             throw new ServletException("API key missing");
         }
 
-        String apiUri = filterConfig.getInitParameter("api-uri");
+        String apiUri = getInitParameter("api-uri");
         httpApiClient = new HttpApiClient(apiKey, apiUri);
 
         filterParams = getFilterRegex("filter-params");
@@ -43,7 +43,7 @@ public class Config {
         filterUri = getFilterRegex("filter-uri");
         crawlers = getFilterRegex("filter-crawlers");
         if(crawlers == null) crawlers = Pattern.compile(CRAWLERS);
-        if(filterConfig.getInitParameter("capture-crawlers") != null)
+        if(getInitParameter("capture-crawlers") != null)
             captureCrawlers = true;
 
         try {
@@ -53,25 +53,34 @@ public class Config {
         }
     }
 
+    private String getInitParameter(String name) {
+        String value = filterConfig.getInitParameter(name);
+        if (value != null) return value;
+        name = "io.clickstream." + name;
+        value = filterConfig.getServletContext().getInitParameter(name);
+        if (value != null) return value;
+        return System.getenv(name);
+    }
+
     public void setFilterConfig(FilterConfig filterConfig) {
         this.filterConfig = filterConfig;
     }
 
 
     private boolean isConfigParameterTrue(String name) {
-        String param = filterConfig.getInitParameter(name);
+        String param = getInitParameter(name);
         return param != null && param.equals("true");
     }
 
     private Pattern getFilterRegex(String param) {
-        String sFilter = filterConfig.getInitParameter(param);
+        String sFilter = getInitParameter(param);
         return sFilter != null && !sFilter.trim().equals("") ?
                 Pattern.compile("(" + sFilter + ")") :
                 null;
     }
 
     private String getJsFilter(String param) {
-        String sFilter = filterConfig.getInitParameter(param);
+        String sFilter = getInitParameter(param);
         return sFilter != null ?
                 "[" + join(sFilter.split("\\|"), ",") + "]" :
                 null;

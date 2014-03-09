@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 // TODO: STATUS_WITH_NO_ENTITY_BODY, benchmark, logging
@@ -21,6 +22,7 @@ public class CaptureFilter implements Filter {
     private Config config;
     private ApiResponse handshakeResponse;
     private Future<ApiResponse> future;
+    private ExecutorService executorService = Executors.newCachedThreadPool();
 
     public void init(FilterConfig filterConfig) throws ServletException {
         config = new Config(filterConfig);
@@ -35,6 +37,12 @@ public class CaptureFilter implements Filter {
 
     public void destroy() {
         config.setFilterConfig(null);
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void doFilter(ServletRequest req, ServletResponse res,
@@ -55,8 +63,9 @@ public class CaptureFilter implements Filter {
             if(isContentTypeAccepted(responseWrapper.getContentType())) {
                 Inspector inspector = new Inspector(config, handshakeResponse);
                 String body = inspector.investigate(request, responseWrapper, start, end);
+                executorService.submit(inspector);
                 responseWrapper.finishResponse(body);
-                System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
+//                System.out.println(("Done: " + (System.currentTimeMillis() - s - (end - start))));
             } else {
                 responseWrapper.finishResponse();
             }

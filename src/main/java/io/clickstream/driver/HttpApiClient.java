@@ -1,7 +1,6 @@
 package io.clickstream.driver;
 
 import com.google.gson.Gson;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -47,7 +46,7 @@ class HttpApiClient {
         HttpURLConnection con = (HttpURLConnection) objUrl.openConnection();
         con.setRequestProperty("User-Agent", "Clickstream/JVM");
         con.setRequestProperty("Accept", "application/json");
-        System.out.println("\nSending request to URL : " + url);
+//        System.out.println("\nSending request to URL : " + url);
         return con;
     }
 

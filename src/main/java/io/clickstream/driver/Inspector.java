@@ -2,12 +2,9 @@ package io.clickstream.driver;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 class Inspector implements Runnable {
@@ -19,7 +16,6 @@ class Inspector implements Runnable {
     private final ApiResponse handshakeResponse;
     private final String jsFilterParams;
     private Hit hit;
-    private ExecutorService executorService = Executors.newCachedThreadPool();
 
     public Inspector(Config config, ApiResponse handshakeResponse) {
         this.httpApiClient = config.getHttpApiClient();
@@ -40,7 +36,6 @@ class Inspector implements Runnable {
             body = insertJs(cookie, pid, body);
         }
 
-        executorService.submit(this);
         return body;
     }
 
@@ -78,7 +73,7 @@ class Inspector implements Runnable {
         try {
             ApiResponse response = httpApiClient.postData(hit.toJson());
             // TODO: log response
-            System.out.println("status:" + response.getStatus() + ", message:" + response.getMessage());
+//            System.out.println("status:" + response.getStatus() + ", message:" + response.getMessage());
         } catch (IOException e) {
             // TODO: log error
             e.printStackTrace();
